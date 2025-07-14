@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const newPlayerNameInput = document.getElementById("new-player-name");
   const addPlayerBtn = document.getElementById("add-player-btn");
   const startGameBtn = document.getElementById("start-game-btn");
+  const resumeGameBtn = document.getElementById("resume-game-btn");
+  const clearSavedGameBtn = document.getElementById("clear-saved-game-btn");
   // const loadGameBtn = document.getElementById('load-game-btn'); // Removed
   const scoreTable = document.getElementById("score-table");
   const scoreTableHead = scoreTable.querySelector("thead");
@@ -31,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Local Storage Keys ---
   const CACHED_PLAYERS_STORAGE_KEY = "skullKingCachedPlayers";
   const GAME_HISTORY_STORAGE_KEY = "skullKingGameHistory"; // New key for history
+  const LAST_GAME_STATE_KEY = "skullKingLastGameState";
 
   // --- Helper Functions ---
 
@@ -166,7 +169,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // Update the player setup section state
   const renderPlayerSetup = () => {
     startGameBtn.disabled = players.length < 2; // Need at least 2 players
-    // loadGameBtn.disabled = !loadFromLocalStorage(LAST_GAME_STORAGE_KEY); // Removed
+    const savedGame = loadFromLocalStorage(LAST_GAME_STATE_KEY);
+    if (savedGame) {
+      resumeGameBtn.classList.remove("hidden");
+      clearSavedGameBtn.classList.remove("hidden");
+    } else {
+      resumeGameBtn.classList.add("hidden");
+      clearSavedGameBtn.classList.add("hidden");
+    }
+  };
+
+  const saveGameState = () => {
+    const gameState = {
+      players,
+      currentRound,
+    };
+    saveToLocalStorage(LAST_GAME_STATE_KEY, gameState);
   };
 
   // --- Game Initialization and Setup ---
@@ -489,19 +507,22 @@ document.addEventListener("DOMContentLoaded", () => {
       // Game over - save to history and maybe display winner
       alert("Game Over! Check the scores.");
       saveGameHistory(); // Save the completed game to history
+      localStorage.removeItem(LAST_GAME_STATE_KEY); // Clear saved game
       nextRoundBtn.classList.add("hidden"); // Ensure next round button is hidden
       // Optional: Display winner here
     } else {
       nextRoundBtn.classList.remove("hidden");
+      saveGameState();
     }
   };
 
-  const renderRoundScores = () => {
+  const renderRoundScores = (round) => {
+    const roundToRender = round || currentRound;
     const roundRow = document.createElement("tr");
     roundRow.classList.add("border-b", "border-gray-200");
     const roundCell = document.createElement("td");
     roundCell.classList.add("border", "border-gray-300", "p-2", "text-center");
-    roundCell.textContent = currentRound;
+    roundCell.textContent = roundToRender;
     roundRow.appendChild(roundCell);
 
     players.forEach((player) => {
@@ -512,12 +533,11 @@ document.addEventListener("DOMContentLoaded", () => {
         "p-2",
         "text-center"
       );
-      // Get the last added score (the score for the current round)
-      scoreCell.textContent = player.scores[player.scores.length - 1];
+      // Get the score for the specific round
+      const score = player.scores[roundToRender - 1];
+      scoreCell.textContent = score;
       scoreCell.classList.add(
-        player.scores[player.scores.length - 1] < 0
-          ? "text-red-600"
-          : "text-green-600"
+        score < 0 ? "text-red-600" : "text-green-600"
       ); // Color negative scores
       roundRow.appendChild(scoreCell);
     });
@@ -684,7 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
       newPlayerNameInput.value = "";
       renderSelectedPlayers(); // Clear and update selected players display
       renderPlayerSetup(); // Reset player setup state
-      // localStorage.removeItem(LAST_GAME_STORAGE_KEY); // Removed - we don't save unfinished games anymore
+      localStorage.removeItem(LAST_GAME_STATE_KEY);
     }
   };
 
@@ -728,7 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .querySelector("#round-score-row")
         .querySelectorAll("td:not(:first-child)")
         .forEach((td) => (td.textContent = "0"));
-      // No need to save ongoing game state with LAST_GAME_STORAGE_KEY anymore
+      saveGameState();
     } else {
       // Should not happen if nextRoundBtn is hidden after round 10
       alert("Game finished!");
@@ -736,7 +756,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const resumeGame = () => {
+    const savedGame = loadFromLocalStorage(LAST_GAME_STATE_KEY);
+    if (savedGame) {
+      players = savedGame.players;
+      currentRound = savedGame.currentRound;
+      initializeGame();
+      // Need to re-render the score table body
+      players.forEach((player, playerIndex) => {
+        player.scores.forEach((score, roundIndex) => {
+          // This is a bit tricky, we need to re-create the rows
+        });
+      });
+      for (let i = 1; i < currentRound; i++) {
+        renderRoundScores(i);
+      }
+    }
+  };
+
+  const clearSavedGame = () => {
+    if (confirm("Are you sure you want to clear the saved game?")) {
+      localStorage.removeItem(LAST_GAME_STATE_KEY);
+      renderPlayerSetup();
+    }
+  };
+
   newGameBtn.addEventListener("click", startNewGame);
+  resumeGameBtn.addEventListener("click", resumeGame);
+  clearSavedGameBtn.addEventListener("click", clearSavedGame);
 
   // --- Initial Load ---
   renderCachedNames(); // Display cached names on page load

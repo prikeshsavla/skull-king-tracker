@@ -35,3 +35,4 @@ export const removeFromLocalStorage = (key) => {
 // --- Local Storage Keys ---
 export const CACHED_PLAYERS_STORAGE_KEY = "skullKingCachedPlayers";
 export const GAME_HISTORY_STORAGE_KEY = "skullKingGameHistory";
+export const LAST_GAME_STATE_KEY = "skullKingLastGameState";
