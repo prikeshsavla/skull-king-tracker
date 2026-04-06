@@ -13,6 +13,9 @@ A simple, mobile-friendly web application for tracking scores during games of Sk
 - Caches player names entered for easy selection in future games.
 - Automatically saves completed game history (final scores with date and time) in local storage.
 - Displays a history of past games with final scores.
+- Highlights winners in the game history, including ties.
+- Supports sorting game history by newest, oldest, or highest winning score.
+- Includes an option to clear saved game history from local storage.
 
 ## Technologies Used
 
@@ -54,7 +57,9 @@ That's it! The application runs directly in your browser.
     - After completing Round 10, an alert will indicate the game is over.
     - The final scores will be automatically saved to the Game History.
 6.  **Game History:**
-    - The "Game History" section at the bottom of the page displays a list of all completed games saved in your browser's local storage, with the date/time and final scores.
+    - The "Game History" section at the bottom of the page displays a list of all completed games saved in your browser's local storage, with the date/time, winner, and final scores.
+    - Use the sort dropdown to reorder history entries.
+    - Use the "Clear History" button to remove all saved games from the current browser.
 
 ## Game Rules
 
@@ -66,9 +71,6 @@ For detailed rules on how to play Skull King, please refer to the official ruleb
 
 - More detailed bonus point tracking (specific types of bonuses).
 - Option to edit scores after calculation (with caution).
-- Visual indication of who won the game in the history.
-- Sorting options for the game history.
-- Option to clear game history.
 - A more visually engaging way to display the current round's inputs.
 
 ## License

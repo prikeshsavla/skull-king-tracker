@@ -98,11 +98,25 @@
 
         <div id="game-history" class="mt-8 border-t border-slate-200 pt-6">
             <h2 class="mb-4 text-center text-xl font-bold text-blue-700">Game History</h2>
+            <div class="mb-4 flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:flex-row sm:items-center sm:justify-between">
+                <label for="history-sort-select" class="flex items-center gap-3 text-sm font-semibold text-slate-800">
+                    <span>Sort history</span>
+                    <select id="history-sort-select" class="min-h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-200">
+                        <option value="newest">Newest first</option>
+                        <option value="oldest">Oldest first</option>
+                        <option value="highest-score">Highest winning score</option>
+                    </select>
+                </label>
+                <button id="clear-history-btn" class="min-h-11 rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200">
+                    Clear History
+                </button>
+            </div>
             <div class="overflow-x-auto">
                 <table id="history-table" class="w-full min-w-[24rem] border-collapse overflow-hidden rounded-2xl border border-slate-200">
                     <thead>
                         <tr>
                             <th class="border border-slate-200 bg-slate-700 p-2 text-center text-white">Date/Time</th>
+                            <th class="border border-slate-200 bg-slate-700 p-2 text-center text-white">Winner</th>
                             </tr>
                     </thead>
                     <tbody id="history-table-body">

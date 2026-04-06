@@ -12,7 +12,11 @@ import {
   nextRound,
   startNewGame as resetGameUI,
 } from "./game.js"; // Alias startNewGame to avoid confusion
-import { loadAndRenderGameHistory } from "./history.js";
+import {
+  clearGameHistory,
+  loadAndRenderGameHistory,
+  updateHistorySortOrder,
+} from "./history.js";
 import {
   ACTIVE_GAME_STORAGE_KEY,
   loadFromLocalStorage,
@@ -43,6 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyTable = document.getElementById("history-table");
   const historyTableHead = historyTable.querySelector("thead");
   const historyTableBody = document.getElementById("history-table-body");
+  const historySortSelect = document.getElementById("history-sort-select");
+  const clearHistoryBtn = document.getElementById("clear-history-btn");
 
   // --- Set UI References in ui.js ---
   setUIReferences({
@@ -55,6 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
     currentRoundInputsDiv,
     historyTableHead,
     historyTableBody,
+    historySortSelect,
+    clearHistoryBtn,
   });
 
   // --- Initialize Modules ---
@@ -137,6 +145,16 @@ document.addEventListener("DOMContentLoaded", () => {
       clearPlayers();
       clearActiveGame();
       newPlayerNameInput.value = "";
+    }
+  });
+
+  historySortSelect.addEventListener("change", (event) => {
+    updateHistorySortOrder(event.target.value);
+  });
+
+  clearHistoryBtn.addEventListener("click", () => {
+    if (confirm("Clear all saved game history from this browser?")) {
+      clearGameHistory();
     }
   });
 });

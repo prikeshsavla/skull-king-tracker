@@ -1,10 +1,18 @@
 // history.js
 import {
   loadFromLocalStorage,
-  saveToLocalStorage,
   GAME_HISTORY_STORAGE_KEY,
+  removeFromLocalStorage,
+  saveToLocalStorage,
 } from "./storage.js";
 import { renderGameHistory as renderHistoryUI } from "./ui.js"; // Import with alias
+
+let historySortOrder = "newest";
+
+const renderStoredGameHistory = () => {
+  const gameHistory = loadFromLocalStorage(GAME_HISTORY_STORAGE_KEY) || {};
+  renderHistoryUI(gameHistory, { sortOrder: historySortOrder });
+};
 
 // Save completed game to history
 export const saveGameHistory = (players) => {
@@ -17,11 +25,20 @@ export const saveGameHistory = (players) => {
     })),
   };
   saveToLocalStorage(GAME_HISTORY_STORAGE_KEY, gameHistory);
-  renderHistoryUI(gameHistory); // Update the history display after saving
+  renderHistoryUI(gameHistory, { sortOrder: historySortOrder }); // Update the history display after saving
 };
 
 // Load and display game history on page load
 export const loadAndRenderGameHistory = () => {
-  const gameHistory = loadFromLocalStorage(GAME_HISTORY_STORAGE_KEY) || {};
-  renderHistoryUI(gameHistory);
+  renderStoredGameHistory();
+};
+
+export const updateHistorySortOrder = (sortOrder) => {
+  historySortOrder = sortOrder;
+  renderStoredGameHistory();
+};
+
+export const clearGameHistory = () => {
+  removeFromLocalStorage(GAME_HISTORY_STORAGE_KEY);
+  renderStoredGameHistory();
 };

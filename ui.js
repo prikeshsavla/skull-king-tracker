@@ -10,6 +10,8 @@ let scoreTableFoot;
 let currentRoundInputsDiv;
 let historyTableHead;
 let historyTableBody;
+let historySortSelect;
+let clearHistoryBtn;
 
 // Function to set DOM references
 export const setUIReferences = (refs) => {
@@ -22,6 +24,8 @@ export const setUIReferences = (refs) => {
   currentRoundInputsDiv = refs.currentRoundInputsDiv;
   historyTableHead = refs.historyTableHead;
   historyTableBody = refs.historyTableBody;
+  historySortSelect = refs.historySortSelect;
+  clearHistoryBtn = refs.clearHistoryBtn;
 };
 
 // Render cached player name buttons
@@ -381,17 +385,57 @@ export const updateTotalScores = (players) => {
 };
 
 // Render the game history table
-export const renderGameHistory = (gameHistory) => {
-  const historyEntries = Object.entries(gameHistory).sort(([keyA], [keyB]) =>
-    keyB.localeCompare(keyA)
+const getWinningPlayers = (players) => {
+  const highestScore = Math.max(...players.map((player) => player.totalScore));
+  return players.filter((player) => player.totalScore === highestScore);
+};
+
+export const renderGameHistory = (
+  gameHistory,
+  { sortOrder = "newest" } = {}
+) => {
+  const historyEntries = Object.entries(gameHistory).sort(
+    ([timestampA, gameDataA], [timestampB, gameDataB]) => {
+      if (sortOrder === "oldest") {
+        return timestampA.localeCompare(timestampB);
+      }
+
+      if (sortOrder === "highest-score") {
+        const highestScoreA = Math.max(
+          ...gameDataA.players.map((player) => player.totalScore)
+        );
+        const highestScoreB = Math.max(
+          ...gameDataB.players.map((player) => player.totalScore)
+        );
+
+        if (highestScoreB !== highestScoreA) {
+          return highestScoreB - highestScoreA;
+        }
+      }
+
+      return timestampB.localeCompare(timestampA);
+    }
   );
+
+  if (historySortSelect) {
+    historySortSelect.value = sortOrder;
+  }
+
+  if (clearHistoryBtn) {
+    clearHistoryBtn.disabled = historyEntries.length === 0;
+    clearHistoryBtn.classList.toggle("opacity-50", historyEntries.length === 0);
+    clearHistoryBtn.classList.toggle(
+      "cursor-not-allowed",
+      historyEntries.length === 0
+    );
+  }
 
   historyTableBody.innerHTML = ""; // Clear previous history table body
 
-  // Clear previous history table headers (except Date/Time)
+  // Clear previous history table headers (except Date/Time and Winner)
   historyTableHead
     .querySelector("tr")
-    .querySelectorAll("th:not(:first-child)")
+    .querySelectorAll("th:nth-child(n + 3)")
     .forEach((th) => th.remove());
 
   if (historyEntries.length === 0) {
@@ -467,6 +511,21 @@ export const renderGameHistory = (gameHistory) => {
 
     historyRow.appendChild(dateTimeCell);
 
+    const winnerCell = document.createElement("td");
+    winnerCell.classList.add(
+      "border",
+      "border-gray-300",
+      "p-2",
+      "text-center",
+      "font-semibold"
+    );
+    const winningPlayers = getWinningPlayers(gameData.players);
+    winnerCell.textContent = winningPlayers.map((player) => player.name).join(", ");
+    winnerCell.classList.add(
+      winningPlayers.length > 1 ? "text-amber-700" : "text-blue-700"
+    );
+    historyRow.appendChild(winnerCell);
+
     // Add score cells for each player in the history header order
     allPlayerNames.forEach((name) => {
       const scoreCell = document.createElement("td");
@@ -479,6 +538,9 @@ export const renderGameHistory = (gameHistory) => {
       const playerInHistory = gameData.players.find((p) => p.name === name);
       if (playerInHistory) {
         scoreCell.textContent = playerInHistory.totalScore;
+        if (winningPlayers.some((player) => player.name === name)) {
+          scoreCell.classList.add("bg-amber-50", "font-bold");
+        }
         scoreCell.classList.add(
           playerInHistory.totalScore < 0 ? "text-red-600" : "text-green-600"
         );
