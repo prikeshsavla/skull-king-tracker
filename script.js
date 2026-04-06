@@ -2,15 +2,22 @@
 import {
   initializePlayerSetup,
   addPlayer as addPlayerToSetup,
+  clearPlayers,
   getPlayers,
 } from "./playerSetup.js";
 import {
+  clearActiveGame,
   initializeGame,
   calculateRoundScore,
   nextRound,
   startNewGame as resetGameUI,
 } from "./game.js"; // Alias startNewGame to avoid confusion
-import { loadAndRenderGameHistory, saveGameHistory } from "./history.js";
+import { loadAndRenderGameHistory } from "./history.js";
+import {
+  ACTIVE_GAME_STORAGE_KEY,
+  loadFromLocalStorage,
+  removeFromLocalStorage,
+} from "./storage.js";
 import { setUIReferences } from "./ui.js"; // Import function to set UI refs
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -57,6 +64,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   loadAndRenderGameHistory(); // Load and display history on page load
 
+  const savedActiveGame = loadFromLocalStorage(ACTIVE_GAME_STORAGE_KEY);
+  const hasRestorableGame =
+    savedActiveGame &&
+    Array.isArray(savedActiveGame.players) &&
+    savedActiveGame.players.length >= 2 &&
+    typeof savedActiveGame.currentRound === "number";
+
+  if (hasRestorableGame) {
+    const restoreGame = confirm(
+      "An unfinished game was found. Would you like to restore it?"
+    );
+
+    if (restoreGame) {
+      initializeGame(savedActiveGame.players, {
+        gameAreaDiv,
+        playerSetupDiv,
+        currentRoundTitle,
+        calculateRoundBtn,
+        nextRoundBtn,
+      }, savedActiveGame);
+    } else {
+      removeFromLocalStorage(ACTIVE_GAME_STORAGE_KEY);
+    }
+  }
+
   // --- Event Listeners ---
 
   addPlayerBtn.addEventListener("click", () => {
@@ -102,11 +134,9 @@ document.addEventListener("DOMContentLoaded", () => {
       )
     ) {
       resetGameUI(); // Reset the game UI
-      // Reset player setup state manually here
-      addPlayerToSetup(""); // Reset players array internally in playerSetup
-      playerListUl.innerHTML =
-        '<li class="text-gray-600 italic">No players added yet.</li>'; // Reset selected players display
-      startGameBtn.disabled = true; // Disable start button
+      clearPlayers();
+      clearActiveGame();
+      newPlayerNameInput.value = "";
     }
   });
 });

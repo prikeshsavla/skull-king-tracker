@@ -15,6 +15,14 @@ export const setPlayers = (newPlayers) => {
   players = newPlayers;
 };
 
+export const clearPlayers = () => {
+  players = [];
+  renderSelectedPlayers(players, removePlayer);
+  if (renderSetupCallback) {
+    renderSetupCallback();
+  }
+};
+
 export const initializePlayerSetup = (updateSetupUI) => {
   renderSetupCallback = updateSetupUI; // Store the callback
   renderCachedNames(

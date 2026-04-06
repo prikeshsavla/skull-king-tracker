@@ -193,6 +193,12 @@ export const renderCurrentRoundInputs = (
     const inputIds = ["bid", "tricks-won", "bonus"];
 
     inputFields.forEach((labelText, fieldIndex) => {
+      const notifyInputChange = () => {
+        if (updateInputValueCallback) {
+          updateInputValueCallback();
+        }
+      };
+
       const inputDiv = document.createElement("div");
       inputDiv.classList.add("flex", "items-center", "mb-2");
 
@@ -222,6 +228,7 @@ export const renderCurrentRoundInputs = (
         "focus:ring-2",
         "focus:ring-blue-500"
       );
+      input.addEventListener("input", notifyInputChange);
 
       // Stepper Buttons
       const stepperDown = document.createElement("button");
@@ -241,6 +248,7 @@ export const renderCurrentRoundInputs = (
         } else {
           input.value = Math.max(inputMins[fieldIndex], currentValue - 1);
         }
+        notifyInputChange();
       });
 
       const stepperUp = document.createElement("button");
@@ -263,6 +271,7 @@ export const renderCurrentRoundInputs = (
             inputMaxes[fieldIndex] !== null ? inputMaxes[fieldIndex] : Infinity;
           input.value = Math.min(maxValue, currentValue + 1);
         }
+        notifyInputChange();
       });
 
       inputDiv.appendChild(input);
