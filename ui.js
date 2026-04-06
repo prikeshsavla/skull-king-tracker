@@ -36,15 +36,17 @@ export const renderCachedNames = (cachedPlayers, addPlayerCallback) => {
     const button = document.createElement("button");
     button.textContent = name;
     button.classList.add(
+      "min-h-11",
+      "rounded-xl",
+      "bg-slate-700",
       "px-3",
-      "py-1",
-      "bg-gray-600",
+      "py-2",
       "text-white",
-      "rounded-md",
-      "hover:bg-gray-700",
+      "font-medium",
+      "hover:bg-slate-800",
       "focus:outline-none",
-      "focus:ring-2",
-      "focus:ring-gray-500",
+      "focus:ring-4",
+      "focus:ring-slate-200",
       "text-sm"
     );
     button.addEventListener("click", () => {
@@ -67,13 +69,16 @@ export const renderSelectedPlayers = (players, removePlayerCallback) => {
   players.forEach((player) => {
     const li = document.createElement("li");
     li.classList.add(
-      "bg-gray-200",
+      "rounded-xl",
+      "bg-slate-100",
       "px-3",
-      "py-1",
-      "rounded-md",
+      "py-2",
       "text-sm",
       "flex",
-      "items-center"
+      "items-center",
+      "gap-2",
+      "ring-1",
+      "ring-slate-200"
     );
 
     const playerNameSpan = document.createElement("span");
@@ -83,13 +88,20 @@ export const renderSelectedPlayers = (players, removePlayerCallback) => {
 
     const removeBtn = document.createElement("button");
     removeBtn.textContent = "x";
+    removeBtn.setAttribute("aria-label", `Remove ${player.name}`);
     removeBtn.classList.add(
       "ml-auto",
-      "text-red-600",
-      "hover:text-red-800",
+      "min-h-10",
+      "min-w-10",
+      "rounded-lg",
+      "text-rose-700",
+      "hover:bg-rose-50",
+      "hover:text-rose-800",
       "font-bold",
       "leading-none",
-      "focus:outline-none"
+      "focus:outline-none",
+      "focus:ring-4",
+      "focus:ring-rose-200"
     );
     removeBtn.addEventListener("click", () =>
       removePlayerCallback(player.name)
@@ -162,28 +174,35 @@ export const renderCurrentRoundInputs = (
   currentRoundInputsDiv.innerHTML = "";
 
   players.forEach((player, index) => {
-    const playerInputBlock = document.createElement("div");
+    const playerInputBlock = document.createElement("section");
     playerInputBlock.classList.add(
-      "mb-4",
-      "p-4",
+      "rounded-[1.5rem]",
       "border",
-      "border-gray-300",
-      "rounded-md",
-      "bg-gray-50"
+      "border-slate-200",
+      "bg-white",
+      "p-4",
+      "shadow-sm",
+      "ring-1",
+      "ring-slate-100"
     );
+    playerInputBlock.setAttribute("aria-labelledby", `player-heading-${index}`);
 
     const playerNameHeader = document.createElement("h3");
     playerNameHeader.classList.add(
-      "text-lg",
-      "font-bold",
+      "mb-4",
+      "text-xl",
+      "font-black",
       "text-blue-700",
-      "mb-3",
       "border-b",
-      "border-gray-300",
-      "pb-2"
+      "border-slate-200",
+      "pb-3"
     );
     playerNameHeader.textContent = player.name;
+    playerNameHeader.id = `player-heading-${index}`;
     playerInputBlock.appendChild(playerNameHeader);
+
+    const inputGrid = document.createElement("div");
+    inputGrid.classList.add("grid", "grid-cols-1", "gap-3");
 
     // Input fields with labels and steppers
     const inputFields = ["Bid", "Tricks Won", "Bonus"];
@@ -200,46 +219,80 @@ export const renderCurrentRoundInputs = (
       };
 
       const inputDiv = document.createElement("div");
-      inputDiv.classList.add("flex", "items-center", "mb-2");
+      inputDiv.classList.add(
+        "grid",
+        "grid-cols-[minmax(0,1fr)_auto]",
+        "items-center",
+        "gap-3",
+        "rounded-2xl",
+        "bg-slate-50",
+        "p-3",
+        "ring-1",
+        "ring-slate-200"
+      );
+
+      const fieldInfo = document.createElement("div");
+      fieldInfo.classList.add("min-w-0");
 
       const label = document.createElement("label");
-      label.classList.add("w-28", "font-semibold", "text-gray-700");
-      label.textContent = labelText + ":";
-      inputDiv.appendChild(label);
+      label.classList.add("block", "text-sm", "font-bold", "text-slate-800");
+      label.textContent = labelText;
 
       const input = document.createElement("input");
       input.type = inputTypes[fieldIndex];
       input.value = 0;
+      input.inputMode = "numeric";
       input.min = inputMins[fieldIndex];
       if (inputMaxes[fieldIndex] !== null) {
         input.max = inputMaxes[fieldIndex];
       }
       input.id = `${inputIds[fieldIndex]}-input-player-${index}`;
+      label.htmlFor = input.id;
+      input.setAttribute("aria-describedby", `player-heading-${index}`);
 
       input.classList.add(
-        "w-16",
-        "p-1",
+        "w-20",
+        "min-h-12",
+        "rounded-xl",
         "border",
-        "border-gray-300",
-        "rounded-md",
+        "border-slate-300",
+        "bg-white",
+        "p-2",
+        "text-lg",
+        "font-semibold",
         "text-center",
-        "mr-2",
         "focus:outline-none",
-        "focus:ring-2",
-        "focus:ring-blue-500"
+        "focus:ring-4",
+        "focus:ring-blue-200"
       );
       input.addEventListener("input", notifyInputChange);
+      fieldInfo.appendChild(label);
+      inputDiv.appendChild(fieldInfo);
+
+      const controlGroup = document.createElement("div");
+      controlGroup.classList.add("flex", "items-center", "justify-end", "gap-2");
 
       // Stepper Buttons
       const stepperDown = document.createElement("button");
       stepperDown.textContent = "-";
+      stepperDown.type = "button";
+      stepperDown.setAttribute(
+        "aria-label",
+        `Decrease ${player.name} ${labelText.toLowerCase()}`
+      );
       stepperDown.classList.add(
-        "px-2",
-        "py-1",
-        "bg-gray-300",
-        "rounded-md",
-        "hover:bg-gray-400",
-        "focus:outline-none"
+        "min-h-11",
+        "min-w-11",
+        "rounded-xl",
+        "bg-slate-700",
+        "text-xl",
+        "font-bold",
+        "text-white",
+        "shadow-sm",
+        "hover:bg-slate-800",
+        "focus:outline-none",
+        "focus:ring-4",
+        "focus:ring-slate-200"
       );
       stepperDown.addEventListener("click", () => {
         const currentValue = parseInt(input.value) || 0;
@@ -253,14 +306,24 @@ export const renderCurrentRoundInputs = (
 
       const stepperUp = document.createElement("button");
       stepperUp.textContent = "+";
+      stepperUp.type = "button";
+      stepperUp.setAttribute(
+        "aria-label",
+        `Increase ${player.name} ${labelText.toLowerCase()}`
+      );
       stepperUp.classList.add(
-        "px-2",
-        "py-1",
-        "bg-gray-300",
-        "rounded-md",
-        "hover:bg-gray-400",
+        "min-h-11",
+        "min-w-11",
+        "rounded-xl",
+        "bg-slate-700",
+        "text-xl",
+        "font-bold",
+        "text-white",
+        "shadow-sm",
+        "hover:bg-slate-800",
         "focus:outline-none",
-        "ml-1"
+        "focus:ring-4",
+        "focus:ring-slate-200"
       );
       stepperUp.addEventListener("click", () => {
         const currentValue = parseInt(input.value) || 0;
@@ -274,12 +337,14 @@ export const renderCurrentRoundInputs = (
         notifyInputChange();
       });
 
-      inputDiv.appendChild(input);
-      inputDiv.appendChild(stepperDown);
-      inputDiv.appendChild(stepperUp);
-      playerInputBlock.appendChild(inputDiv);
+      controlGroup.appendChild(stepperDown);
+      controlGroup.appendChild(input);
+      controlGroup.appendChild(stepperUp);
+      inputDiv.appendChild(controlGroup);
+      inputGrid.appendChild(inputDiv);
     });
 
+    playerInputBlock.appendChild(inputGrid);
     currentRoundInputsDiv.appendChild(playerInputBlock);
   });
 };

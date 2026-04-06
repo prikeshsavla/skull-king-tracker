@@ -9,6 +9,7 @@ import { renderCachedNames, renderSelectedPlayers } from "./ui.js";
 // Internal state for the players in the current game setup
 let players = [];
 let renderSetupCallback = null; // Callback to update the main setup UI state
+const maxPlayers = 8;
 
 export const getPlayers = () => players;
 export const setPlayers = (newPlayers) => {
@@ -36,7 +37,9 @@ export const initializePlayerSetup = (updateSetupUI) => {
 // Add a player to the setup list and update display
 export const addPlayer = (name) => {
   const playerName = name.trim();
-  if (playerName && !players.some((p) => p.name === playerName)) {
+  if (playerName && players.length >= maxPlayers) {
+    alert(`You can add up to ${maxPlayers} players.`);
+  } else if (playerName && !players.some((p) => p.name === playerName)) {
     players.push({ name: playerName, scores: [], totalScore: 0 });
     renderSelectedPlayers(players, removePlayer); // Update the display of added players
     updateCachedPlayers(playerName); // Add to cache

@@ -24,6 +24,8 @@ let playerSetupDiv;
 let currentRoundTitle;
 let calculateRoundBtn;
 let nextRoundBtn;
+let roundProgressSummary;
+let roundValidationMessage;
 
 const clonePlayers = (playersToClone) =>
   playersToClone.map((player) => ({
@@ -87,6 +89,8 @@ export const clearActiveGame = () => {
 };
 
 const handleDraftInputsChanged = () => {
+  clearValidationMessage();
+  updateRoundProgressSummary();
   persistActiveGame();
 };
 
@@ -97,6 +101,8 @@ export const initializeGame = (initialPlayers, refs, savedState = null) => {
   currentRoundTitle = refs.currentRoundTitle;
   calculateRoundBtn = refs.calculateRoundBtn;
   nextRoundBtn = refs.nextRoundBtn;
+  roundProgressSummary = document.getElementById("round-progress-summary");
+  roundValidationMessage = document.getElementById("round-validation-message");
 
   playerSetupDiv.classList.add("hidden");
   gameAreaDiv.classList.remove("hidden");
@@ -113,6 +119,8 @@ export const initializeGame = (initialPlayers, refs, savedState = null) => {
   renderCurrentRoundInputs(players, currentRound, handleDraftInputsChanged);
   applyDraftInputs(savedState?.draftInputs);
   updateRoundTitle();
+  updateRoundProgressSummary();
+  clearValidationMessage();
   calculateRoundBtn.classList.toggle("hidden", roundCalculated);
   nextRoundBtn.classList.toggle("hidden", !roundCalculated);
   persistActiveGame();
@@ -122,12 +130,49 @@ const updateRoundTitle = () => {
   currentRoundTitle.textContent = `Round ${currentRound}`;
 };
 
+const setValidationMessage = (message) => {
+  if (!roundValidationMessage) {
+    return;
+  }
+
+  roundValidationMessage.textContent = message;
+  roundValidationMessage.classList.remove("hidden");
+};
+
+const clearValidationMessage = () => {
+  if (!roundValidationMessage) {
+    return;
+  }
+
+  roundValidationMessage.textContent = "";
+  roundValidationMessage.classList.add("hidden");
+};
+
+const updateRoundProgressSummary = () => {
+  if (!roundProgressSummary) {
+    return;
+  }
+
+  const totalTricksEntered = getCurrentDraftInputs().reduce(
+    (sum, draftInput) => sum + draftInput.tricksWon,
+    0
+  );
+  const roundStateLabel = roundCalculated
+    ? "Round locked in. Review scores or move to the next round."
+    : `Tricks entered: ${totalTricksEntered}/${currentRound}. Kraken rounds may total ${
+        currentRound - 1
+      }.`;
+
+  roundProgressSummary.textContent = roundStateLabel;
+};
+
 // Calculate scores for the current round
 export const calculateRoundScore = () => {
   const bids = [];
   const tricksWon = [];
   const bonuses = [];
   let validationFailed = false;
+  clearValidationMessage();
 
   players.forEach((player, index) => {
     if (validationFailed) return;
@@ -144,10 +189,23 @@ export const calculateRoundScore = () => {
 
     // --- Individual Player Tricks Won Validation ---
     if (won < 0 || won > currentRound) {
-      // Added check for negative tricks won
-      alert(
-        `Error: ${player.name}'s 'Tricks Won' value (${won}) is invalid for Round ${currentRound}. Please correct it.`
+      setValidationMessage(
+        `${player.name}'s tricks won must be between 0 and ${currentRound}.`
       );
+      validationFailed = true;
+      return;
+    }
+
+    if (bid < 0 || bid > currentRound) {
+      setValidationMessage(
+        `${player.name}'s bid must be between 0 and ${currentRound}.`
+      );
+      validationFailed = true;
+      return;
+    }
+
+    if (bonus < 0) {
+      setValidationMessage(`${player.name}'s bonus cannot be negative.`);
       validationFailed = true;
       return;
     }
@@ -168,10 +226,8 @@ export const calculateRoundScore = () => {
   const totalTricksWon = tricksWon.reduce((sum, current) => sum + current, 0);
   // Valid total tricks won are equal to the round number OR one less than the round number
   if (totalTricksWon !== currentRound && totalTricksWon !== currentRound - 1) {
-    alert(
-      `Error: The total number of tricks won by players (${totalTricksWon}) must equal ${currentRound} or ${
-        currentRound - 1
-      } (if the Kraken won the trick). Please adjust the 'Tricks Won' values.`
+    setValidationMessage(
+      `Total tricks won must equal ${currentRound} or ${currentRound - 1} for a Kraken round. You entered ${totalTricksWon}.`
     );
     return; // Exit the function if validation fails
   }
@@ -223,6 +279,7 @@ export const calculateRoundScore = () => {
 
   renderRoundScores(players, currentRound);
   updateTotalScores(players);
+  updateRoundProgressSummary();
 
   calculateRoundBtn.classList.add("hidden");
 
@@ -244,6 +301,7 @@ export const nextRound = () => {
     roundCalculated = false;
     updateRoundTitle();
     renderCurrentRoundInputs(players, currentRound, handleDraftInputsChanged);
+    clearValidationMessage();
     calculateRoundBtn.classList.remove("hidden");
     nextRoundBtn.classList.add("hidden");
     // Clear input values for the new round
@@ -254,6 +312,7 @@ export const nextRound = () => {
     document
       .querySelectorAll("#round-score-row td:not(:first-child)")
       .forEach((td) => (td.textContent = "0"));
+    updateRoundProgressSummary();
     persistActiveGame();
   } else {
     // Should not happen if nextRoundBtn is hidden after round 10
@@ -280,5 +339,6 @@ export const startNewGame = () => {
 
   gameAreaDiv.classList.add("hidden");
   playerSetupDiv.classList.remove("hidden");
+  clearValidationMessage();
   clearActiveGame();
 };
